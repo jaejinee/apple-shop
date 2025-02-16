@@ -4,12 +4,16 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { createContext, useEffect, useState } from "react";
+import { createContext, lazy, useEffect, useState } from "react";
 import data from "./data.js";
 import { Routes, Route, Link, useNavigate, Outlet } from "react-router-dom";
-import Detail from "./routes/detail.jsx";
 import axios from "axios";
-import Cart from "./routes/Cart.jsx";
+import { useQuery } from "@tanstack/react-query";
+// import Detail from "./routes/detail.jsx";
+// import Cart from "./routes/Cart.jsx";
+
+const Detail = lazy(() => import("./routes/detail.jsx"));
+const Cart = lazy(() => import("./routes/Cart.jsx"));
 
 // let Context1 = createContext(); //state 보관함
 
@@ -32,6 +36,18 @@ function App() {
   let navigate = useNavigate();
 
   let [stock] = useState([10, 11, 12]);
+
+  let result = useQuery({
+    queryKey: ["aa"],
+    queryFn: async () => {
+      const response = await axios.get(
+        "https://codingapple1.github.io/userdata.json"
+      );
+      console.log("요청됨: " + response.data);
+      return response.data;
+    },
+    staleTime: 4000,
+  });
 
   return (
     <div className="App">
@@ -60,6 +76,13 @@ function App() {
             >
               Cart
             </Nav.Link>
+          </Nav>
+
+          <Nav className="ms-auto">
+            {/* {result.isLoading ? "로딩중" : result.data.name} */}
+            {result.isLoading && "로딩중"}
+            {result.error && "에러 발생"}
+            {result.data && result.data.name}
           </Nav>
         </Container>
       </Navbar>
@@ -133,7 +156,6 @@ function App() {
 
 function RecentItem({ shoes }) {
   let seenItem = JSON.parse(localStorage.getItem("watched")) || [];
-  console.log("!!" + seenItem);
   return (
     <div>
       {seenItem
